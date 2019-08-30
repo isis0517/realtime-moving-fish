@@ -12,6 +12,8 @@ while(True):
   ret, frame = cap.read()
 
   # 顯示圖片
+  frame = np.flip(frame,1)
+  
   cv2.imshow('frame', frame)
 
   # 若按下 q 鍵則離開迴圈
