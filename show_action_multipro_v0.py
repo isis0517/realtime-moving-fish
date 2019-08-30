@@ -1,11 +1,47 @@
-import pygame
-from pygame.locals import *
 import cv2
 import numpy as np
 import sys
 import tkinter as tk
-from multiprocessing import Process, Queue		#multi process to aviod imshow be effected
+from multiprocessing import Process,Queue		#multi process to aviod imshow be effected
 from functools import partial
+import array
+
+class FrameQueue(object):		
+
+	def __init__(self,num = 100):	#initial long = 100 and let fornt and back be zero
+		super(FrameQueue, self).__init__()
+		self.data =	[tuple() for x in range(num)]	#use array to store data
+		self.fornt_index = 0
+		self.back_index = 0
+		self.num = num
+	
+	def put(self,input):
+		self.data[self.back_index] = input
+		self.back_index +=1
+		if(self.back_index >= self.num):
+			self.back_index = 0
+
+	def get(self):
+
+		if(self.back_index == self.fornt_index):
+			raise Exception("no more data out")
+
+		p = self.data[self.fornt_index]
+		self.fornt_index+=1
+
+		if(self.fornt_index >= self.num):
+			self.fornt_index = 0
+
+		return p
+
+	def empty(self):
+		if(self.back_index == self.fornt_index):
+			return True
+		else:
+			return False
+
+
+
 
 def show_window(action):
 
@@ -18,10 +54,6 @@ def show_window(action):
 		print("You die")
 		sys.die()
 
-	while(Left.read()):
-		action.put(frame)
-
-
 	while(True):
 		# 從攝影機擷取一張影像
 		#ret, frame = cap.read()
@@ -32,7 +64,7 @@ def show_window(action):
 		cv2.imshow('frame', frame)
 
 		# 若按下 q 鍵則離開迴圈
-		if cv2.waitKey(1) & 0xFF == ord('q'):
+		if cv2.waitKey(25) & 0xFF == ord('q'):
 			break
 
 	# 釋放攝影機
@@ -43,9 +75,14 @@ def show_window(action):
 
 
 def show_console(q):
-	Left = cv2.VideoCapture("testdata\\Left.mp4") 
-	q.put(Left)
 	# 第1步，例項化object，建立視窗window
+	Left = cv2.VideoCapture("testdata\\Left.mp4")
+	while Left.isOpened():
+		ret, frame = Left.read()
+		if(ret == False):
+			break 
+		q.put(frame)
+
 	window = tk.Tk()
 
 	# 第2步，給視窗的視覺化起名字
@@ -61,10 +98,9 @@ def show_console(q):
 	l.pack()
 
 	# 定義一個函式功能（內容自己自由編寫），供點選Button按鍵時呼叫，呼叫命令引數command=函式名
-	on_hit = False
 
 	# 第5步，在視窗介面設定放置Button按鍵
-	b = tk.Button(window, text='hit me', font=('Arial', 12), width=10, height=1, command=partial(hit_me,on_hit,var,q))
+	b = tk.Button(window, text='hit me', font=('Arial', 12), width=10, height=1, command=partial(hit_me,var,q))
 	b.pack() 	#Label內容content區域放置位置，自動調節尺寸
 				# 放置lable的方法有：1）l.pack(); 2)l.place();
 
@@ -72,29 +108,35 @@ def show_console(q):
 	window.mainloop()	# 注意，loop因為是迴圈的意思，window.mainloop就會讓window不斷的重新整理，如果沒有mainloop,就是一個靜態的window,傳入進去的值就不會有迴圈，mainloop就相當於一個很大的while迴圈，有個while，每點選一次就會更新一次，所以我們必須要有迴圈
 						# 所有的視窗檔案都必須有類似的mainloop函式，mainloop是視窗檔案的關鍵的關鍵。
 
-def hit_me(on_hit,var,q):
+def hit_me(var,q):
 	Left = cv2.VideoCapture("testdata\\Left.mp4") 
-	Right = cv2.VideoCapture("testdata\\Left.mp4")
-	stop_img = cv2.imread("testdata\\Stop.jpg")
+	#Right = cv2.VideoCapture("testdata\\Left.mp4")
+	#stop_img = cv2.imread("testdata\\Stop.jpg")
+	while Left.isOpened():
+		ret, frame = Left.read()
+		if(ret == False):
+			break 
+		q.put(frame)
 
-	if on_hit == False:
-		on_hit = True
-		var.set('Go Left')
-		while Left.isOpened():
-			q.put(Left.read())
-
-	else:
-		on_hit = False
-		var.set('')
+	var.set('Go Left')
+	#while Left.isOpened():
+		#q.put(Left.read())
 
 if __name__ == '__main__':
 		q = Queue()
-		#q.put(cv2.VideoCapture("testdata\\Left.mp4"))
+
+		Left = cv2.VideoCapture("testdata\\Left.mp4")
+		while Left.isOpened():
+			ret, frame = Left.read()
+			if(ret == False):
+				break 
+			q.put(frame)
 		#show_console(q)
 		window = Process(target=show_window,args=(q,))
 		console = Process(target=show_console, args=(q,))
-		window.start()
 		console.start()
+		window.start()
+
 		console.join()
 		window.terminate()
 
