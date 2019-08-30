@@ -3,13 +3,14 @@ import cv2
 import numpy as np
 import sys
 
-camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture("testdata\\Left.mp4") #cv2.VideoCapture(0)
+cap = cv2.VideoCapture("testdata\\Left.mp4")
 pygame.init()
 pygame.display.set_caption("OpenCV camera stream on Pygame")
 screen = pygame.display.set_mode([1280,720])
 
 try:
-    while True:
+    while cap.isOpened():
 
         ret, frame = camera.read()
 		

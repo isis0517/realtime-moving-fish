@@ -2,7 +2,7 @@ import tkinter as tk
 
 class Example(tk.Frame):
     def __init__(self, parent):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent) #繼承tk.Frame
 
         # create a prompt, an input box, an output label,
         # and a button to do the computation
