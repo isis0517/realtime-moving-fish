@@ -3,11 +3,14 @@ import numpy as np
 import sys
 import tkinter as tk
 from multiprocessing import Process,Queue		#multi process to aviod imshow be effected
+import time
+import matplotlib.pyplot as plt
 '''
 also it work now, there are many plase can improve.
 1. let moving continue, it can achieve by better action incode and moving logic improve
 2. let movie be full screen, it should be found out way on opencv document
 3. it may not work on linux, it should be tryed
+
 '''
 
 ''' it is trush
@@ -45,24 +48,56 @@ class FrameQueue(object):
 		else:
 			return False
 '''
-
+X = np.array([0])
+Y = np.array([0])
 
 
 def show_window(action):	#the fuction show movie
 
-	stop_img = cv2.imread("testdata\\Stop.jpg")
+	global X,Y
 
+	stop_img = cv2.imread("testdata\\Stop.jpg")
+	fish_img = cv2.imread("testdata\\zebrafish.png")
+	center = (94,266)
+	flip = cv2.getRotationMatrix2D(center, -45, 1)
+	fish_img = cv2.warpAffine(fish_img, flip, (533, 188))
+	background = 10 * np.ones((1080,1920,3), dtype = np.int16)
+
+
+	start = time.time()
+	X = np.append(X,round(start*1000))
+	Max_time = 0
 	while(True):
 		#從Queue中取得下一張圖片，若Queue中沒有其他的Frame，則使用上次的圖片
 		frame = stop_img if action.empty() else action.get()
-		# 更新圖片
-		cv2.imshow('frame', frame)
+		frame = background.copy()
+
 		#把停下來的畫面存起
 		stop_img = frame
 
+
+		time_dash = round((time.time()-start)*1000)
+		Y = np.append(Y,round(time_dash*1000))
+		Max_time = time_dash if time_dash> Max_time else Max_time
+
+		outputframe = frame.copy()
+
+		cv2.putText(outputframe, str(time_dash), (10, 40), cv2.FONT_HERSHEY_SIMPLEX,
+  			1, (0, 125, 255), 1, cv2.LINE_AA)
+		cv2.putText(outputframe, str(Max_time), (10, 60), cv2.FONT_HERSHEY_SIMPLEX,
+  			1, (0, 0, 255), 1, cv2.LINE_AA)
+
+		# 更新圖片
+		cv2.imshow('frame1', outputframe)
+
+
+		#紀錄時間
+		start = time.time();
+
 		# 若按下 q 鍵則離開迴圈
-		if cv2.waitKey(33) & 0xFF == ord('q'):
+		if cv2.waitKey(1) & 0xFF == ord('q'):
 			break
+
 
 	# 關閉所有 OpenCV 視窗
 	cv2.destroyAllWindows()
@@ -133,7 +168,8 @@ if __name__ == '__main__':
 	
 	q = Queue()	
 	Left = cv2.VideoCapture("testdata\\Left.mp4") 
-	print(type(Left))
+	fish_img = cv2.imread("testdata\\zebrafish.png")
+	print(fish_img.shape)
 	#show_console(q)
 	window = Process(target=show_window,args=(q,))
 	console = Process(target=show_console, args=(q,))
@@ -141,5 +177,12 @@ if __name__ == '__main__':
 	window.start()
 	console.join()	#等待console結束，主程序才會繼續
 	window.terminate()	#一旦console join, 摧毀window程序
+	X = np.append(X,1)
 
- 
+	print(X.shape)
+	print(X)
+
+
+ 	#plt.scatter(X,Y)
+
+ 	
