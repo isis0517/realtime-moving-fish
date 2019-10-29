@@ -50,7 +50,7 @@ class FrameQueue(object):
 '''
 
 
-def show_window(action):	#the fuction show movie
+def show_window(action,v):	#the fuction show movie
 
 
 	stop_img = cv2.imread("testdata\\Stop.jpg")
@@ -105,24 +105,9 @@ def show_window(action):	#the fuction show movie
 	cv2.destroyAllWindows()
 
 
-def show_console(q):
+def show_console(q,v):
 
 	#讀入影片,由於參數傳遞的關係，數據必須先預處理成list才能避免傳遞時使用傳址的方式
-	Temp = cv2.VideoCapture("testdata\\Left.mp4") 
-	Left = list()
-	while Temp.isOpened():
-		ret, frame = Temp.read()
-		if(ret == False):
-			break
-		Left.append(frame)
-
-	Temp = cv2.VideoCapture("testdata\\Right.mp4")
-	Right = list()
-	while Temp.isOpened():
-		ret, frame = Temp.read()
-		if(ret == False):
-			break
-		Right.append(frame)
 
 	# 第1步，例項化object，建立視窗window
 	window = tk.Tk()
@@ -143,10 +128,10 @@ def show_console(q):
 
 	# 第5步，在視窗介面設定放置Button按鍵
 	# lambda可以生成一個次級的funcion(?)以便於傳遞參數
-	Bu_Left = tk.Button(window, text='Left', font=('Arial', 12), width=5, height=1, command=lambda: Go_Left(var,q,Left))
+	Bu_Left = tk.Button(window, text='Left', font=('Arial', 12), width=5, height=1, command=lambda: Go_Left(var,q,v))
 	Bu_Left.pack() 	#Label內容content區域放置位置，自動調節尺寸
 				# 放置lable的方法有：1）l.pack(); 2)l.place();
-	Bu_Right = tk.Button(window, text="Right", font=('Arial',12), width=5 ,height=1, command=lambda: Go_Right(var,q,Right))
+	Bu_Right = tk.Button(window, text="Right", font=('Arial',12), width=5 ,height=1, command=lambda: Go_Right(var,q,v))
 	Bu_Right.pack()
 
 	# 第6步，主視窗迴圈顯示
@@ -154,28 +139,27 @@ def show_console(q):
 	# 注意，loop因為是迴圈的意思，window.mainloop就會讓window不斷的重新整理，如果沒有mainloop,就是一個靜態的window,傳入進去的值就不會有迴圈，mainloop就相當於一個很大的while迴圈，有個while，每點選一次就會更新一次，所以我們必須要有迴圈
 	# 所有的視窗檔案都必須有類似的mainloop函式，mainloop是視窗檔案的關鍵的關鍵。
 
-def Go_Left (var,q,Left):	#bu_Left的動作
-	#把frame加入queue
-	for frame in Left:
-		q.put(frame)
-	#
-	var.set('at Left')
+def Go_Left (var,q,v):	#bu_Left的動作
+	v=-1.
+	var.set(str(v))
+	return
 
-def Go_Right(var,q,Right):	#bu_Right的動作
-	for frame in Right:
-		q.put(frame)
-	var.set('at Right')
+def Go_Right(var,q,v):	#bu_Right的動作
+	v=1.0
+	var.set(str(v))
+	return
 
 
 if __name__ == '__main__':
 	
 	q = Queue()	
+	v = 0.1
 	Left = cv2.VideoCapture("testdata\\Left.mp4") 
 	fish_img = cv2.imread("testdata\\zebrafish.png")
 	print(fish_img.shape)
-	#show_console(q)
-	window = Process(target=show_window,args=(q,))
-	console = Process(target=show_console, args=(q,))
+
+	window = Process(target=show_window,args=(q,v,))
+	console = Process(target=show_console, args=(q,v,))
 	console.start()
 	window.start()
 	console.join()	#等待console結束，主程序才會繼續
