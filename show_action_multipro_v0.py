@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import sys
 import tkinter as tk
-from multiprocessing import Process,Queue		#multi process to aviod imshow be effected
+from multiprocessing import Process, Queue, Value		#multi process to aviod imshow be effected
 import time
 import matplotlib.pyplot as plt
 '''
